@@ -373,5 +373,4 @@ complete in the documentation.
 
 ## License
 
-No licence has been declared for this repository yet. Decide on one before wider internal
-or external distribution.
+Released under the [MIT License](LICENSE).

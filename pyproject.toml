@@ -7,6 +7,8 @@ name = "queryfix"
 version = "0.1.0"
 description = "Static pull-request review for database query performance"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
 # Bounded, not exact: every consumer repo installs QueryFix fresh in CI, so an
 # unbounded dependency lets an upstream release change org-wide behaviour overnight
 # (sqlglot in particular changes AST details between majors, which the rules read).
