@@ -1,11 +1,43 @@
 # QueryFix
 
-Catches slow and unsafe database queries in code review, before they reach production.
+**A pull-request bot that catches slow and unsafe database queries before they reach production.**
 
 [![ci](https://github.com/pranavv05/QueryFix/actions/workflows/ci.yml/badge.svg)](https://github.com/pranavv05/QueryFix/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.11%2B-blue)](#quick-start)
 [![typed](https://img.shields.io/badge/mypy-strict-blue)](#contributing)
 [![status](https://img.shields.io/badge/status-pilot%20ready-yellow)](#current-status)
+
+---
+
+QueryFix reads the database code in every pull request, finds the queries that will hurt at
+production scale, and says so in a single GitHub review, with the exact line, the reason it
+is slow, and a suggested fix. It understands raw SQL and migrations, JPQL/HQL, JPA native
+queries and Spring Data derived methods, and it follows Java control flow across files to
+spot N+1 access patterns that no single-query check can see.
+
+- **Deterministic.** The same diff always produces the same findings, and every finding
+  names its rule, file and line. The LLM is optional and only writes prose.
+- **Quiet.** One review per PR, edited in place on every push, scoped to the lines the PR
+  actually changed.
+- **Safe.** It never approves, merges, pushes or edits code, and it never touches a real
+  database. Advisory mode makes it comment-only.
+- **Zero infrastructure.** One workflow file in the consuming repository; no server to run.
+
+## Screenshots
+
+Output from a real run of QueryFix on a recorded pull request that adds a reporting
+migration and repository changes to the bundled [sandbox app](queryfix-sandbox/). The review
+text is exactly what QueryFix posts; it is rendered here in a GitHub-style frame, and the
+header strip is added for context. Reproduce it offline with
+`queryfix review --repo pranavv05/QueryFix --pr 4 --fixture tests/fixtures/diffs --dry-run`.
+
+**The review summary: status, counts, and the first blocking finding**
+
+![QueryFix review summary showing a blocked status and an unqualified DELETE flagged as critical](docs/images/review-summary.png)
+
+**Findings ranked by severity, each with evidence, impact and a fix**
+
+![QueryFix findings: unbounded SELECTs flagged high, a leading-wildcard LIKE flagged medium](docs/images/review-findings.png)
 
 ---
 
@@ -203,7 +235,7 @@ These hold for every stage, present and future:
 **Requirements:** Python 3.11+. No Docker or JDK needed for anything below.
 
 ```bash
-git clone https://github.com/<org>/QueryFix.git
+git clone https://github.com/pranavv05/QueryFix.git
 cd QueryFix
 pip install -e ".[dev]"
 pytest
