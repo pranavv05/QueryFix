@@ -315,17 +315,13 @@ class Settings(BaseSettings):
         ignored = (
             frozenset()
             if self.ignore_severities is None
-            else parse_severities(
-                self.ignore_severities, setting_name="QUERYFIX_IGNORE_SEVERITIES"
-            )
+            else parse_severities(self.ignore_severities, setting_name="QUERYFIX_IGNORE_SEVERITIES")
         )
         return EnforcementPolicy(
             advisory=self.advisory,
             blocking_severities=blocking,
             ignored_severities=ignored,
-            blocking_rule_ids=parse_rule_ids(
-                self.block_rules, setting_name="QUERYFIX_BLOCK_RULES"
-            ),
+            blocking_rule_ids=parse_rule_ids(self.block_rules, setting_name="QUERYFIX_BLOCK_RULES"),
             warning_rule_ids=parse_rule_ids(self.warn_rules, setting_name="QUERYFIX_WARN_RULES"),
             ignored_rule_ids=parse_rule_ids(
                 self.ignore_rules, setting_name="QUERYFIX_IGNORE_RULES"
@@ -394,8 +390,7 @@ def _missing_message(fields: list[str] | tuple[str, ...]) -> str:
         "",
         *[f"    {described.get(field, (field.upper(), ''))[0]}=..." for field in fields],
         "",
-        f"To import QueryFix without configuration, set {ENVIRONMENT_VARIABLE}="
-        f"{TEST_ENVIRONMENT}.",
+        f"To import QueryFix without configuration, set {ENVIRONMENT_VARIABLE}={TEST_ENVIRONMENT}.",
     ]
     return "\n".join(lines)
 
