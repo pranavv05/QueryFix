@@ -1,0 +1,32 @@
+name: QueryFix
+
+# QueryFix reviewing its own pull requests (dogfooding), calling the
+# reusable workflow this repository publishes for every other consumer — see
+# queryfix-review.yml and docs/adopting-queryfix.md.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  group: queryfix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    uses: ./.github/workflows/queryfix-review.yml
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      # Dogfooding always installs from the exact commit under review, not
+      # `main` — otherwise a change to the reviewer's own logic would not be
+      # exercised until after it merged.
+      queryfix-ref: ${{ github.event.pull_request.head.sha }}
+      liquibase-changelog-path: ${{ vars.LIQUIBASE_CHANGELOG_PATH }}
+      groq-model: ${{ vars.GROQ_MODEL }}
+      block-severities: ${{ vars.QUERYFIX_BLOCK_SEVERITIES }}
+    secrets:
+      groq-api-key: ${{ secrets.GROQ_API_KEY }}

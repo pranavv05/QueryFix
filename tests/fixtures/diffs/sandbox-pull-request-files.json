@@ -1,0 +1,75 @@
+[
+  {
+    "additions": 3,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2FREADME.md",
+    "changes": 3,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2FREADME.md?ref=7f2df6551261110dded40c1bbeb0bba80829e2c8",
+    "deletions": 0,
+    "filename": "queryfix-sandbox/README.md",
+    "patch": "@@ -161,3 +161,6 @@ constructor SnakeYAML 2.x removed. Spring Boot 3.x manages SnakeYAML to 2.x, so\n [Datafaker](https://www.datafaker.net/) is the maintained fork with the same API\n if you would rather drop the pin \u2014 JavaFaker is used here because it was asked\n for by name.\n+\n+<!-- Touched by the QueryFix diff fixture PR: Markdown is a language no\n+extractor claims, so ingest must skip this file rather than degrade it. -->",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2FREADME.md",
+    "sha": "1350d10b8db14ae06a535ef806bef0ae1c484588",
+    "status": "modified"
+  },
+  {
+    "additions": 0,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/1e8abf374378da7f6d86b0b8dfaa97b74f253079/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Fdomain%2FOrderStatus.java",
+    "changes": 10,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Fdomain%2FOrderStatus.java?ref=1e8abf374378da7f6d86b0b8dfaa97b74f253079",
+    "deletions": 10,
+    "filename": "queryfix-sandbox/src/main/java/com/queryfix/sandbox/domain/OrderStatus.java",
+    "patch": "@@ -1,10 +0,0 @@\n-package com.queryfix.sandbox.domain;\n-\n-public enum OrderStatus {\n-    PENDING,\n-    PAID,\n-    SHIPPED,\n-    DELIVERED,\n-    CANCELLED,\n-    REFUNDED\n-}",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/1e8abf374378da7f6d86b0b8dfaa97b74f253079/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Fdomain%2FOrderStatus.java",
+    "sha": "c1f22c445153328fb880b6623bbb7f9ed30e5f57",
+    "status": "removed"
+  },
+  {
+    "additions": 4,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderLineRepository.java",
+    "changes": 5,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderLineRepository.java?ref=7f2df6551261110dded40c1bbeb0bba80829e2c8",
+    "deletions": 1,
+    "filename": "queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderLineRepository.java",
+    "patch": "@@ -5,7 +5,7 @@\n import java.util.List;\n import org.springframework.data.jpa.repository.JpaRepository;\n \n-public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {\n+public interface OrderLineRepository extends JpaRepository<OrderItem, Long> {\n \n     /**\n      * Derived query, indexed on order_id. Fine on its own; becomes an N+1 when\n@@ -18,4 +18,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {\n      * page of orders instead of one per order.\n      */\n     List<OrderItem> findByOrderIdIn(Collection<Long> orderIds);\n+\n+    /** Added in the fixture PR, on the renamed path. */\n+    List<OrderItem> findBySku(String sku);\n }",
+    "previous_filename": "queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderItemRepository.java",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderLineRepository.java",
+    "sha": "8a0dd230119209d012268bdddd0fe5c3298137ae",
+    "status": "renamed"
+  },
+  {
+    "additions": 9,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderRepository.java",
+    "changes": 9,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderRepository.java?ref=7f2df6551261110dded40c1bbeb0bba80829e2c8",
+    "deletions": 0,
+    "filename": "queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderRepository.java",
+    "patch": "@@ -21,6 +21,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {\n     /** Healthy comparison query: indexed column, bounded range. */\n     List<Order> findByStatusAndPlacedAtAfter(OrderStatus status, OffsetDateTime placedAfter);\n \n+    /** Added in the fixture PR: the first of two hunks in this file. */\n+    List<Order> findByStatusAndCustomerId(OrderStatus status, Long customerId);\n+\n     /*\n      * PLANTED BUG: native query using SELECT * with no WHERE clause. Reads every\n      * column of every row in `orders` and materialises the whole table into the\n@@ -45,4 +48,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {\n                             + \"FROM orders WHERE placed_at >= :since\",\n             nativeQuery = true)\n     List<Object[]> exportRecentOrders(@Param(\"since\") OffsetDateTime since);\n+    /**\n+     * Added in the fixture PR: the second hunk, far enough from the first that\n+     * git emits two separate hunks rather than one.\n+     */\n+    @Query(value = \"SELECT * FROM order_items WHERE sku LIKE '%-REFURB'\", nativeQuery = true)\n+    List<Object[]> findRefurbishedItems();\n }",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fjava%2Fcom%2Fqueryfix%2Fsandbox%2Frepository%2FOrderRepository.java",
+    "sha": "514d992a90f265a9d264109b28c68ebca4951230",
+    "status": "modified"
+  },
+  {
+    "additions": 3,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV1__create_tables.sql",
+    "changes": 3,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV1__create_tables.sql?ref=7f2df6551261110dded40c1bbeb0bba80829e2c8",
+    "deletions": 0,
+    "filename": "queryfix-sandbox/src/main/resources/db/migration/V1__create_tables.sql",
+    "patch": "@@ -57,3 +57,6 @@ CREATE TABLE order_items (\n );\n \n CREATE INDEX idx_order_items_order_id ON order_items (order_id);\n+\n+-- Appended so the recorded diff carries a hunk far from the top of the file.\n+SELECT * FROM order_items;",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV1__create_tables.sql",
+    "sha": "b3ed1c91170776ec1b4f94c5f671530bd254cf17",
+    "status": "modified"
+  },
+  {
+    "additions": 10,
+    "blob_url": "https://github.com/pranavv05/QueryFix/blob/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV2__reporting_indexes.sql",
+    "changes": 10,
+    "contents_url": "https://api.github.com/repos/pranavv05/QueryFix/contents/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV2__reporting_indexes.sql?ref=7f2df6551261110dded40c1bbeb0bba80829e2c8",
+    "deletions": 0,
+    "filename": "queryfix-sandbox/src/main/resources/db/migration/V2__reporting_indexes.sql",
+    "patch": "@@ -0,0 +1,10 @@\n+-- V2: reporting support for the nightly customer summary.\n+--\n+-- Recorded as the \"added file\" case in QueryFix's diff fixture.\n+\n+CREATE INDEX idx_order_items_sku ON order_items (sku);\n+\n+-- Deliberately unbounded: the statement this fixture expects a finding on.\n+SELECT * FROM orders;\n+\n+DELETE FROM order_items;",
+    "raw_url": "https://github.com/pranavv05/QueryFix/raw/7f2df6551261110dded40c1bbeb0bba80829e2c8/queryfix-sandbox%2Fsrc%2Fmain%2Fresources%2Fdb%2Fmigration%2FV2__reporting_indexes.sql",
+    "sha": "4c967834c9881193a2a7dce57d463ece8d5a744d",
+    "status": "added"
+  }
+]

@@ -1,0 +1,10 @@
+1785923413922|1|statement|SHOW search_path
+1785923413927|0|statement|SHOW search_path
+1785923415705|2|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=1
+1785923415712|1|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=2
+1785923415715|1|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=3
+1785923415718|0|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=4
+1785923415720|1|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=5
+1785923415724|1|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0 join customers c1_0 on c1_0.id=o1_0.customer_id where c1_0.id=6
+1785923420789|15|statement|select o1_0.id,o1_0.customer_id,o1_0.order_number,o1_0.placed_at,o1_0.status,o1_0.total_amount from orders o1_0
+1785923420880|3|statement|select c1_0.id,c1_0.country,c1_0.email,c1_0.full_name,c1_0.lifetime_value,c1_0.loyalty_tier,c1_0.signed_up_at from customers c1_0 where c1_0.country='US' order by c1_0.signed_up_at desc

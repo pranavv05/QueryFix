@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Modeled on the real changelog-56.xml shape audited in a real Spring Boot service, where
+  payment.priority / sla_status / current_execution_queue are added entirely via
+  raw <sql>ALTER TABLE ... ADD COLUMN — never a structured <addColumn>. This
+  fixture reproduces that shape for `widgets.priority` and an accompanying raw
+  CREATE INDEX, neither of which the loader is allowed to infer.
+-->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="raw-sql-only" author="test">
+        <sql>ALTER TABLE widgets ADD COLUMN priority varchar(10);</sql>
+        <sql>CREATE INDEX idx_widgets_priority ON widgets (priority);</sql>
+    </changeSet>
+</databaseChangeLog>

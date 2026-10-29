@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic-settings
+sqlglot
+psycopg2-binary
+anthropic
+groq>=1.0  # <1.0 (e.g. 0.11.0) passes a `proxies` kwarg to httpx.Client that
+           # httpx>=0.28 no longer accepts, breaking every Groq call at construction time
+pygithub
+pytest
+
+# Test-only: fastapi.testclient needs an HTTP client at runtime. Current
+# Starlette wants httpx2; plain httpx still works but is deprecated for this.
+httpx2

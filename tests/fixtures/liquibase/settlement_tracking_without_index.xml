@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Identical to settlement_tracking_with_index.xml except the createIndex on
+  payment_id is removed. The deterministic acceptance-test pair: this file must
+  make UnindexedFilterRule report a finding on the same query the "with_index"
+  file makes it stay silent on.
+-->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="settlement-tracking-table" author="test">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="settlement_tracking"/></not>
+        </preConditions>
+        <createTable tableName="settlement_tracking">
+            <column name="account_number" type="varchar(35)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="payment_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creation_date_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- idx_settlement_tracking_payment_id intentionally omitted. -->
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,34 @@
+# .gitignore first
+__pycache__/
+.pytest_cache/
+*.pyc
+target/
+.env
+
+# Python tooling
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+
+# `target/` above also covers the generated p6spy statement log
+# (queryfix-sandbox/target/p6spy-statements.log). A small captured excerpt is
+# committed under tests/fixtures/p6spy/ instead, so the multi-thousand-line real
+# log never lands in the repo.
+
+# Maven wrapper: the scripts and properties ARE tracked so a fresh clone can
+# build without a Maven install; the downloaded distribution jar is not.
+.mvn/wrapper/*.jar
+
+# Editors / OS
+.idea/
+.vscode/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local environment overrides. Secrets belong in the environment, never the repo.
+.env.*

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.0</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.queryfix</groupId>
+  <artifactId>queryfix-sandbox</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>queryfix-sandbox</name>
+  <description>
+    Deliberately flawed Spring Boot app used as a fixture for QueryFix.
+    NOT a production template. See README.md.
+  </description>
+
+  <properties>
+    <java.version>21</java.version>
+    <!--
+      JavaFaker 1.0.2 (last released 2020) calls `new SafeConstructor()`, a
+      no-arg constructor that SnakeYAML 2.x removed. Spring Boot 3.x manages
+      SnakeYAML to 2.x, so leaving this unpinned makes every Faker call throw
+      NoSuchMethodError at runtime. Pinning back to 1.33 is the standard
+      workaround. Config is kept in application.properties (not .yml) so Boot
+      does not need SnakeYAML to start.
+
+      The cleaner long-term fix is Datafaker (net.datafaker:datafaker), the
+      maintained fork with the same API surface. JavaFaker is used here because
+      it was explicitly requested.
+    -->
+    <snakeyaml.version>1.33</snakeyaml.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- Runtime SQL capture, so QueryFix's N+1 stage can read real statement logs. -->
+    <dependency>
+      <groupId>p6spy</groupId>
+      <artifactId>p6spy</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.javafaker</groupId>
+      <artifactId>javafaker</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <!--
+            Pin the JVM timezone to UTC.
+
+            Two reasons, one of them load-bearing. The pgjdbc driver sends the
+            JVM's default zone as the `TimeZone` startup parameter, and on a
+            host whose zone resolves to a legacy alias (e.g. `Asia/Calcutta`)
+            the Postgres 16 image rejects the connection outright with
+            `FATAL: invalid value for parameter "TimeZone"` — Flyway never gets
+            to run. Recent tzdata dropped those backward-compat aliases.
+
+            It also keeps seeded `TIMESTAMPTZ` values reproducible across
+            machines, which the fixed random seed in DataSeeder assumes; the
+            seeder already builds every timestamp in UTC.
+          -->
+          <jvmArguments>-Duser.timezone=UTC</jvmArguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

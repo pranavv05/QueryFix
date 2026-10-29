@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "queryfix"
+version = "0.1.0"
+description = "Static pull-request review for database query performance"
+requires-python = ">=3.11"
+# Bounded, not exact: every consumer repo installs QueryFix fresh in CI, so an
+# unbounded dependency lets an upstream release change org-wide behaviour overnight
+# (sqlglot in particular changes AST details between majors, which the rules read).
+# Bounds are the versions the test suite was last green against; raise them
+# deliberately, with a test run, rather than by accident.
+dependencies = [
+    "pygithub>=2.9,<3",
+    "pydantic>=2.13,<3",
+    "pydantic-settings>=2.14,<3",
+    "sqlglot>=30.15,<31",
+    "groq>=1.0,<2",
+    "pyyaml>=6,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9,<10",
+    "ruff>=0.16,<1",
+    "mypy>=2.3,<3",
+    "types-PyYAML",
+    "fastapi>=0.141,<1",
+    "httpx>=0.28,<1",
+    "anthropic>=0.120,<1",
+]
+
+[project.scripts]
+queryfix = "queryfix.cli:entrypoint"
+
+[tool.setuptools.packages.find]
+include = ["queryfix*"]
+
+# pytest configuration stays in pytest.ini. Splitting it across both files would be a
+# trap: pytest.ini silently wins over [tool.pytest.ini_options] when both exist.
+
+[tool.ruff]
+# CLAUDE.md's documented limit. The formatter enforces it; E501 is deliberately not
+# selected below, per ruff's own guidance for formatter users — it cannot split a long
+# string literal, so it only ever reports lines nobody can mechanically fix.
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Ruff's default (E4/E7/E9 + F) plus the rule families this tree already satisfies:
+#   I   import sorting          UP  modern syntax for the target version
+#   B   likely bugs             C4  comprehension clarity
+#   SIM simplifiable constructs RUF ruff's own checks, incl. sorted __all__
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+
+ignore = [
+    # The ambiguous-unicode family, which flags en/em dashes and curly quotes in
+    # prose. This codebase uses them deliberately throughout its docstrings and
+    # comments; the rules exist to catch homoglyphs in *identifiers*, which is not
+    # what would trip here.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    # `class Severity(str, Enum)` over `StrEnum`. These are the Pydantic stage
+    # contracts in models/; `str, Enum` is the idiom Pydantic documents, and swapping
+    # the base class of a serialized public type is a migration with its own tests,
+    # not a lint fix. Revisit deliberately, not because a rule asked.
+    "UP042",
+]
+
+[tool.mypy]
+strict = true
+files = ["queryfix", "tests"]
+# Pin to the documented floor rather than the interpreter in use, so a construct that
+# needs a newer Python is caught here instead of in a consumer's CI.
+python_version = "3.11"
+# tests/ carries several conftest.py files and no __init__.py, so without these mypy
+# refuses to start: "Duplicate module named conftest".
+explicit_package_bases = true
+mypy_path = "."

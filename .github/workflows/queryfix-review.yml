@@ -1,0 +1,147 @@
+name: QueryFix review (reusable)
+
+# The workflow any repository — public or private — adds a few lines to call.
+# See docs/adopting-queryfix.md for the consumer-side snippet and setup notes.
+#
+# Deliberately does not `actions/checkout` the calling repository: every stage
+# QueryFix runs (ingest, extraction, schema discovery, N+1 cross-file
+# resolution) reads the pull request over the GitHub API at its head SHA, never
+# from local disk. A local checkout would also be the wrong tree half the time
+# — this workflow runs in the *reviewer's* runner, not necessarily checked out
+# at the commit being reviewed.
+
+on:
+  workflow_call:
+    inputs:
+      pr-number:
+        description: "Pull request number to review. Defaults to the triggering event's PR."
+        required: false
+        type: number
+      liquibase-changelog-path:
+        description: >-
+          Path to the repository's root Liquibase changelog. Leave unset —
+          QueryFix discovers it automatically for a standard Spring Boot
+          layout. Set only for a non-standard layout or an ambiguous repo.
+        required: false
+        type: string
+      groq-model:
+        description: "Override the default Groq model used for N+1 explanation prose."
+        required: false
+        type: string
+      advisory:
+        description: >-
+          Pilot mode. Every finding is still posted, but nothing blocks: the review is
+          always a COMMENT and the check passes. Outranks block-severities and a
+          repository's own .queryfix.yml. Turn it off to start enforcing.
+        required: false
+        type: boolean
+        default: false
+      block-severities:
+        description: "Comma-separated severities that make the review REQUEST_CHANGES. Defaults to CRITICAL,HIGH."
+        required: false
+        type: string
+      queryfix-ref:
+        description: >-
+          QueryFix git ref to install (branch, tag, or commit SHA). Consumers
+          should pin a release tag or SHA, not main: every consumer installs this
+          ref on every run, so a moving ref is a moving org-wide gate.
+        required: false
+        type: string
+        default: main
+      queryfix-repo:
+        description: >-
+          OWNER/REPO that QueryFix is installed from. Set this to the
+          organisation's own copy once QueryFix has moved there.
+        required: false
+        type: string
+        default: pranavv05/QueryFix
+      disable-llm:
+        description: >-
+          Never call an LLM provider, even if a groq-api-key is supplied. The
+          review is then fully deterministic and no code leaves the runner except
+          to GitHub. Set this org-wide until an LLM provider has been approved.
+        required: false
+        type: boolean
+        default: false
+      python-version:
+        required: false
+        type: string
+        default: "3.11"
+    secrets:
+      groq-api-key:
+        description: "Optional. Enables Groq-authored prose for N+1 findings. Unset means a fully deterministic review."
+        required: false
+      queryfix-token:
+        description: >-
+          Optional. A token with read access to queryfix-repo, needed only when
+          that repository is private or internal. Without it the install is
+          anonymous and fails on a private repo.
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # A hung run must not hold a runner for the default six hours; a normal review
+    # takes well under a minute.
+    timeout-minutes: 15
+    steps:
+      # Pinned to a full commit SHA, not a tag: a tag can be moved, and this workflow runs
+      # in every consumer repository (v5.6.0).
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Install QueryFix
+        env:
+          QUERYFIX_REPO: ${{ inputs.queryfix-repo }}
+          QUERYFIX_REF: ${{ inputs.queryfix-ref }}
+          QUERYFIX_TOKEN: ${{ secrets.queryfix-token }}
+        # Inputs reach the shell as environment variables, never interpolated into
+        # the script text, so a crafted ref cannot inject commands. The token (when
+        # given) is wired in through git's URL rewriting rather than embedded in the
+        # pip URL, and is removed again afterwards; Actions masks it in logs.
+        run: |
+          if [ -n "$QUERYFIX_TOKEN" ]; then
+            git config --global url."https://x-access-token:${QUERYFIX_TOKEN}@github.com/".insteadOf "https://github.com/"
+          fi
+          python -m pip install "git+https://github.com/${QUERYFIX_REPO}.git@${QUERYFIX_REF}"
+          git config --global --unset-all url."https://x-access-token:${QUERYFIX_TOKEN}@github.com/".insteadOf || true
+      - name: Smoke test
+        # Catches a packaging regression (a module missing from
+        # pyproject.toml's install dependencies, an import-time error) before
+        # it reaches a real pull request rather than surfacing as a mid-run
+        # ModuleNotFoundError.
+        run: queryfix --help
+      - name: Review pull request
+        env:
+          # The default per-run Actions token, automatically scoped to the
+          # calling repository — no pass-through needed, and nothing to add to
+          # that repository's secrets. On a pull_request from a fork this
+          # token is read-only regardless of the `permissions:` block above
+          # (GitHub's own protection against a fork escalating to write
+          # access), so --post-comment silently cannot post there; see
+          # docs/adopting-queryfix.md for the pull_request_target option
+          # that restores it for public repositories that accept fork PRs.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LIQUIBASE_CHANGELOG_PATH: ${{ inputs.liquibase-changelog-path }}
+          GROQ_API_KEY: ${{ secrets.groq-api-key }}
+          GROQ_MODEL: ${{ inputs.groq-model }}
+          QUERYFIX_BLOCK_SEVERITIES: ${{ inputs.block-severities }}
+          QUERYFIX_ADVISORY: ${{ inputs.advisory }}
+          PR_NUMBER: ${{ inputs.pr-number || github.event.pull_request.number }}
+          # disable-llm wins over a supplied groq-api-key: --no-llm means no provider
+          # is ever constructed, so nothing is sent off the runner but GitHub traffic.
+          NO_LLM_FLAG: ${{ inputs.disable-llm && '--no-llm' || '' }}
+        # A non-zero exit here (2 = blocking findings, 1 = QueryFix could
+        # not reliably analyze this pull request, 3 = misconfiguration) fails
+        # this check, which is the point — see queryfix/cli.py's exit-code
+        # constants.
+        run: >-
+          queryfix review
+          --repo "$GITHUB_REPOSITORY"
+          --pr "$PR_NUMBER"
+          --post-comment
+          $NO_LLM_FLAG

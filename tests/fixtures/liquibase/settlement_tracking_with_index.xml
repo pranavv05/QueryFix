@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  QueryFix's own minimal fixture — not vendored from a real Spring Boot service.
+  Modeled on the real changeset audited there (settlement-tracking-table.xml,
+  changeSet id "settlement-tracking-table"): a small table with one leading-
+  indexed foreign-key-shaped column, filtered by a real native @Query in that
+  repository's SettlementTrackingRepository.
+-->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="settlement-tracking-table" author="test">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="settlement_tracking"/></not>
+        </preConditions>
+        <createTable tableName="settlement_tracking">
+            <column name="account_number" type="varchar(35)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="payment_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creation_date_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_settlement_tracking_payment_id" tableName="settlement_tracking">
+            <column name="payment_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

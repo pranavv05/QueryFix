@@ -1,0 +1,103 @@
+diff --git a/queryfix-sandbox/README.md b/queryfix-sandbox/README.md
+index 26edb23..1350d10 100644
+--- a/queryfix-sandbox/README.md
++++ b/queryfix-sandbox/README.md
+@@ -161,3 +161,6 @@ constructor SnakeYAML 2.x removed. Spring Boot 3.x manages SnakeYAML to 2.x, so
+ [Datafaker](https://www.datafaker.net/) is the maintained fork with the same API
+ if you would rather drop the pin — JavaFaker is used here because it was asked
+ for by name.
++
++<!-- Touched by the QueryFix diff fixture PR: Markdown is a language no
++extractor claims, so ingest must skip this file rather than degrade it. -->
+diff --git a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/domain/OrderStatus.java b/queryfix-sandbox/src/main/java/com/queryfix/sandbox/domain/OrderStatus.java
+deleted file mode 100644
+index c1f22c4..0000000
+--- a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/domain/OrderStatus.java
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package com.queryfix.sandbox.domain;
+-
+-public enum OrderStatus {
+-    PENDING,
+-    PAID,
+-    SHIPPED,
+-    DELIVERED,
+-    CANCELLED,
+-    REFUNDED
+-}
+diff --git a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderItemRepository.java b/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderLineRepository.java
+similarity index 78%
+rename from queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderItemRepository.java
+rename to queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderLineRepository.java
+index 21b4a75..8a0dd23 100644
+--- a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderItemRepository.java
++++ b/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderLineRepository.java
+@@ -5,7 +5,7 @@
+ import java.util.List;
+ import org.springframework.data.jpa.repository.JpaRepository;
+ 
+-public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
++public interface OrderLineRepository extends JpaRepository<OrderItem, Long> {
+ 
+     /**
+      * Derived query, indexed on order_id. Fine on its own; becomes an N+1 when
+@@ -18,4 +18,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
+      * page of orders instead of one per order.
+      */
+     List<OrderItem> findByOrderIdIn(Collection<Long> orderIds);
++
++    /** Added in the fixture PR, on the renamed path. */
++    List<OrderItem> findBySku(String sku);
+ }
+diff --git a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderRepository.java b/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderRepository.java
+index d564652..514d992 100644
+--- a/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderRepository.java
++++ b/queryfix-sandbox/src/main/java/com/queryfix/sandbox/repository/OrderRepository.java
+@@ -21,6 +21,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
+     /** Healthy comparison query: indexed column, bounded range. */
+     List<Order> findByStatusAndPlacedAtAfter(OrderStatus status, OffsetDateTime placedAfter);
+ 
++    /** Added in the fixture PR: the first of two hunks in this file. */
++    List<Order> findByStatusAndCustomerId(OrderStatus status, Long customerId);
++
+     /*
+      * PLANTED BUG: native query using SELECT * with no WHERE clause. Reads every
+      * column of every row in `orders` and materialises the whole table into the
+@@ -45,4 +48,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
+                             + "FROM orders WHERE placed_at >= :since",
+             nativeQuery = true)
+     List<Object[]> exportRecentOrders(@Param("since") OffsetDateTime since);
++    /**
++     * Added in the fixture PR: the second hunk, far enough from the first that
++     * git emits two separate hunks rather than one.
++     */
++    @Query(value = "SELECT * FROM order_items WHERE sku LIKE '%-REFURB'", nativeQuery = true)
++    List<Object[]> findRefurbishedItems();
+ }
+diff --git a/queryfix-sandbox/src/main/resources/db/migration/V1__create_tables.sql b/queryfix-sandbox/src/main/resources/db/migration/V1__create_tables.sql
+index 55dc1aa..b3ed1c9 100644
+--- a/queryfix-sandbox/src/main/resources/db/migration/V1__create_tables.sql
++++ b/queryfix-sandbox/src/main/resources/db/migration/V1__create_tables.sql
+@@ -57,3 +57,6 @@ CREATE TABLE order_items (
+ );
+ 
+ CREATE INDEX idx_order_items_order_id ON order_items (order_id);
++
++-- Appended so the recorded diff carries a hunk far from the top of the file.
++SELECT * FROM order_items;
+diff --git a/queryfix-sandbox/src/main/resources/db/migration/V2__reporting_indexes.sql b/queryfix-sandbox/src/main/resources/db/migration/V2__reporting_indexes.sql
+new file mode 100644
+index 0000000..4c96783
+--- /dev/null
++++ b/queryfix-sandbox/src/main/resources/db/migration/V2__reporting_indexes.sql
+@@ -0,0 +1,10 @@
++-- V2: reporting support for the nightly customer summary.
++--
++-- Recorded as the "added file" case in QueryFix's diff fixture.
++
++CREATE INDEX idx_order_items_sku ON order_items (sku);
++
++-- Deliberately unbounded: the statement this fixture expects a finding on.
++SELECT * FROM orders;
++
++DELETE FROM order_items;
